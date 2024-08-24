@@ -1,35 +1,35 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useChat } from 'ai/react'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Upload, Send } from "lucide-react"
-import { parseSRT } from '@/utils/srtParser'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useState } from "react";
+import { useChat } from "ai/react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Upload, Send } from "lucide-react";
+import { parseSRT } from "@/utils/srtParser";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export default function TranscriptChat() {
-  const [transcript, setTranscript] = useState('')
+const TranscriptChat = () => {
+  const [transcript, setTranscript] = useState("");
   const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: '/api/chat',
+    api: "/api/chat",
     initialMessages: [],
     body: { transcript },
-  })
+  });
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
+    const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onload = (e) => {
-        const content = e.target?.result as string
-        const parsedTranscript = parseSRT(content)
-        setTranscript(parsedTranscript)
-      }
-      reader.readAsText(file)
+        const content = e.target?.result as string;
+        const parsedTranscript = parseSRT(content);
+        setTranscript(parsedTranscript);
+      };
+      reader.readAsText(file);
     }
-  }
+  };
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
@@ -61,9 +61,16 @@ export default function TranscriptChat() {
             </TabsList>
             <TabsContent value="chat">
               <ScrollArea className="h-[400px] border rounded-md p-4">
-                {messages.map(m => (
-                  <div key={m.id} className={`mb-4 ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
-                    <span className={`inline-block p-2 rounded-lg ${m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                {messages.map((m) => (
+                  <div
+                    key={m.id}
+                    className={`mb-4 ${m.role === "user" ? "text-right" : "text-left"}`}
+                  >
+                    <span
+                      className={`inline-block p-2 rounded-lg ${
+                        m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
+                      }`}
+                    >
                       {m.content}
                     </span>
                   </div>
@@ -88,10 +95,12 @@ export default function TranscriptChat() {
           />
           <Button type="submit" disabled={isLoading}>
             <Send className="w-4 h-4 mr-2" />
-            {isLoading ? 'Sending...' : 'Send'}
+            {isLoading ? "Sending..." : "Send"}
           </Button>
         </form>
       </CardFooter>
     </Card>
-  )
-}
+  );
+};
+
+export default TranscriptChat;
