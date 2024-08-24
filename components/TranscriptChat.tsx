@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Upload, Send } from "lucide-react";
 import { parseSRT } from "@/utils/srtParser";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ReactMarkdown from 'react-markdown';
 
 const TranscriptChat = () => {
   const [transcript, setTranscript] = useState("");
@@ -71,7 +72,19 @@ const TranscriptChat = () => {
                         m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
                       }`}
                     >
-                      {m.content}
+                      {m.role === "user" ? (
+                        m.content
+                      ) : (
+                        <ReactMarkdown 
+                          className="markdown-content prose prose-sm max-w-none"
+                          components={{
+                            ul: ({node, ...props}) => <ul className="list-disc pl-4" {...props} />,
+                            ol: ({node, ...props}) => <ol className="list-decimal pl-4" {...props} />
+                          }}
+                        >
+                          {m.content}
+                        </ReactMarkdown>
+                      )}
                     </span>
                   </div>
                 ))}
