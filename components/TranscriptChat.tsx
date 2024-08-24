@@ -1,39 +1,39 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useChat } from "ai/react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Upload, Send } from "lucide-react";
-import { parseSRT } from "@/utils/srtParser";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ReactMarkdown from 'react-markdown';
+import { useState } from 'react'
+import { useChat } from 'ai/react'
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Upload, Send } from "lucide-react"
+import { parseSRT } from '@/utils/srtParser'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import ReactMarkdown from 'react-markdown'
 
 const TranscriptChat = () => {
-  const [transcript, setTranscript] = useState("");
+  const [transcript, setTranscript] = useState('')
   const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: "/api/chat",
+    api: '/api/chat',
     initialMessages: [],
     body: { transcript },
-  });
+  })
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const file = event.target.files?.[0]
     if (file) {
-      const reader = new FileReader();
+      const reader = new FileReader()
       reader.onload = (e) => {
-        const content = e.target?.result as string;
-        const parsedTranscript = parseSRT(content);
-        setTranscript(parsedTranscript);
-      };
-      reader.readAsText(file);
+        const content = e.target?.result as string
+        const parsedTranscript = parseSRT(content)
+        setTranscript(parsedTranscript)
+      }
+      reader.readAsText(file)
     }
-  };
+  }
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
+    <Card className="w-full max-w-4xl mx-auto bg-card text-card-foreground">
       <CardHeader>
         <CardTitle>Chat with Your Transcript</CardTitle>
       </CardHeader>
@@ -47,32 +47,25 @@ const TranscriptChat = () => {
               className="hidden"
               id="transcript-upload"
             />
-            <Button asChild>
+            <Button asChild variant="secondary">
               <label htmlFor="transcript-upload" className="cursor-pointer">
                 <Upload className="w-4 h-4 mr-2" />
                 Upload SRT File
               </label>
             </Button>
-            {transcript && <span className="text-sm text-green-500">SRT file uploaded!</span>}
+            {transcript && <span className="text-sm text-primary">SRT file uploaded!</span>}
           </div>
           <Tabs defaultValue="chat">
-            <TabsList>
+            <TabsList className="bg-muted text-muted-foreground">
               <TabsTrigger value="chat">Chat</TabsTrigger>
               <TabsTrigger value="transcript">Transcript</TabsTrigger>
             </TabsList>
             <TabsContent value="chat">
-              <ScrollArea className="h-[400px] border rounded-md p-4">
-                {messages.map((m) => (
-                  <div
-                    key={m.id}
-                    className={`mb-4 ${m.role === "user" ? "text-right" : "text-left"}`}
-                  >
-                    <span
-                      className={`inline-block p-2 rounded-lg ${
-                        m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
-                      }`}
-                    >
-                      {m.role === "user" ? (
+              <ScrollArea className="h-[400px] border rounded-md p-4 bg-card">
+                {messages.map(m => (
+                  <div key={m.id} className={`mb-4 ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
+                    <span className={`inline-block p-2 rounded-lg ${m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}>
+                      {m.role === 'user' ? (
                         m.content
                       ) : (
                         <ReactMarkdown 
@@ -91,7 +84,7 @@ const TranscriptChat = () => {
               </ScrollArea>
             </TabsContent>
             <TabsContent value="transcript">
-              <ScrollArea className="h-[400px] border rounded-md p-4">
+              <ScrollArea className="h-[400px] border rounded-md p-4 bg-card">
                 <pre className="whitespace-pre-wrap">{transcript}</pre>
               </ScrollArea>
             </TabsContent>
@@ -104,16 +97,16 @@ const TranscriptChat = () => {
             value={input}
             onChange={handleInputChange}
             placeholder="Ask a question about your transcript..."
-            className="flex-grow"
+            className="flex-grow bg-input text-foreground"
           />
-          <Button type="submit" disabled={isLoading}>
+          <Button type="submit" disabled={isLoading} variant="primary">
             <Send className="w-4 h-4 mr-2" />
-            {isLoading ? "Sending..." : "Send"}
+            {isLoading ? 'Sending...' : 'Send'}
           </Button>
         </form>
       </CardFooter>
     </Card>
-  );
-};
+  )
+}
 
-export default TranscriptChat;
+export default TranscriptChat
