@@ -1,41 +1,43 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useChat } from 'ai/react'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Upload, Send } from "lucide-react"
-import { parseSRT } from '@/utils/srtParser'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import ReactMarkdown from 'react-markdown'
+import { useState } from "react";
+import { useChat } from "ai/react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Upload, Send } from "lucide-react";
+import { parseSRT } from "@/utils/srtParser";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ReactMarkdown from "react-markdown";
+import { ThemeToggle } from "./ThemeToggle";
 
 const TranscriptChat = () => {
-  const [transcript, setTranscript] = useState('')
+  const [transcript, setTranscript] = useState("");
   const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: '/api/chat',
+    api: "/api/chat",
     initialMessages: [],
     body: { transcript },
-  })
+  });
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
+    const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onload = (e) => {
-        const content = e.target?.result as string
-        const parsedTranscript = parseSRT(content)
-        setTranscript(parsedTranscript)
-      }
-      reader.readAsText(file)
+        const content = e.target?.result as string;
+        const parsedTranscript = parseSRT(content);
+        setTranscript(parsedTranscript);
+      };
+      reader.readAsText(file);
     }
-  }
+  };
 
   return (
     <Card className="w-full max-w-4xl mx-auto bg-card text-card-foreground">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Chat with Your Transcript</CardTitle>
+        <ThemeToggle />
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -62,17 +64,30 @@ const TranscriptChat = () => {
             </TabsList>
             <TabsContent value="chat">
               <ScrollArea className="h-[400px] border rounded-md p-4 bg-card">
-                {messages.map(m => (
-                  <div key={m.id} className={`mb-4 ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
-                    <span className={`inline-block p-2 rounded-lg ${m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}>
-                      {m.role === 'user' ? (
+                {messages.map((m) => (
+                  <div
+                    key={m.id}
+                    className={`mb-4 ${m.role === "user" ? "text-right" : "text-left"}`}
+                  >
+                    <span
+                      className={`inline-block p-2 rounded-lg ${
+                        m.role === "user"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-secondary text-secondary-foreground"
+                      }`}
+                    >
+                      {m.role === "user" ? (
                         m.content
                       ) : (
-                        <ReactMarkdown 
+                        <ReactMarkdown
                           className="markdown-content prose prose-sm max-w-none"
                           components={{
-                            ul: ({node, ...props}) => <ul className="list-disc pl-4" {...props} />,
-                            ol: ({node, ...props}) => <ol className="list-decimal pl-4" {...props} />
+                            ul: ({ node, ...props }) => (
+                              <ul className="list-disc pl-4" {...props} />
+                            ),
+                            ol: ({ node, ...props }) => (
+                              <ol className="list-decimal pl-4" {...props} />
+                            ),
                           }}
                         >
                           {m.content}
@@ -101,12 +116,12 @@ const TranscriptChat = () => {
           />
           <Button type="submit" disabled={isLoading} variant="primary">
             <Send className="w-4 h-4 mr-2" />
-            {isLoading ? 'Sending...' : 'Send'}
+            {isLoading ? "Sending..." : "Send"}
           </Button>
         </form>
       </CardFooter>
     </Card>
-  )
-}
+  );
+};
 
-export default TranscriptChat
+export default TranscriptChat;
