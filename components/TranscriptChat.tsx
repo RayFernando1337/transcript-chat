@@ -8,18 +8,14 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Upload, Send } from "lucide-react"
 import { parseSRT } from '@/utils/srtParser'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function TranscriptChat() {
   const [transcript, setTranscript] = useState('')
   const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
     api: '/api/chat',
-    initialMessages: [
-      {
-        id: 'system',
-        role: 'system',
-        content: `You are an AI assistant that answers questions based on the following transcript: ${transcript}. If the question cannot be answered based on the transcript, politely say so.`
-      }
-    ],
+    initialMessages: [],
+    body: { transcript },
   })
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,7 +32,7 @@ export default function TranscriptChat() {
   }
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle>Chat with Your Transcript</CardTitle>
       </CardHeader>
@@ -58,15 +54,28 @@ export default function TranscriptChat() {
             </Button>
             {transcript && <span className="text-sm text-green-500">SRT file uploaded!</span>}
           </div>
-          <ScrollArea className="h-[400px] border rounded-md p-4">
-            {messages.map(m => (
-              <div key={m.id} className={`mb-4 ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
-                <span className={`inline-block p-2 rounded-lg ${m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
-                  {m.content}
-                </span>
-              </div>
-            ))}
-          </ScrollArea>
+          <Tabs defaultValue="chat">
+            <TabsList>
+              <TabsTrigger value="chat">Chat</TabsTrigger>
+              <TabsTrigger value="transcript">Transcript</TabsTrigger>
+            </TabsList>
+            <TabsContent value="chat">
+              <ScrollArea className="h-[400px] border rounded-md p-4">
+                {messages.map(m => (
+                  <div key={m.id} className={`mb-4 ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
+                    <span className={`inline-block p-2 rounded-lg ${m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                      {m.content}
+                    </span>
+                  </div>
+                ))}
+              </ScrollArea>
+            </TabsContent>
+            <TabsContent value="transcript">
+              <ScrollArea className="h-[400px] border rounded-md p-4">
+                <pre className="whitespace-pre-wrap">{transcript}</pre>
+              </ScrollArea>
+            </TabsContent>
+          </Tabs>
         </div>
       </CardContent>
       <CardFooter>

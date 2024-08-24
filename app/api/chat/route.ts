@@ -11,16 +11,25 @@ const openai = new OpenAIApi(config)
 export const runtime = 'edge'
 
 export async function POST(req: Request) {
-  const { messages } = await req.json()
+  const { messages, transcript } = await req.json()
+
+  const prompt = `You are an AI assistant that answers questions based on the following transcript:
+
+${transcript}
+
+Please analyze the transcript and answer the user's questions. If the question cannot be answered based on the transcript, politely say so and explain why.`
 
   // Ask OpenAI for a streaming chat completion given the prompt
   const response = await openai.createChatCompletion({
-    model: 'gpt-3.5-turbo',
+    model: 'gpt-4o-mini',
     stream: true,
-    messages: messages.map((message: any) => ({
-      role: message.role,
-      content: message.content,
-    })),
+    messages: [
+      { role: 'system', content: prompt },
+      ...messages.map((message: any) => ({
+        role: message.role,
+        content: message.content,
+      })),
+    ],
   })
 
   // Convert the response into a friendly text-stream
