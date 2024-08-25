@@ -114,7 +114,7 @@ const TranscriptChat = () => {
             placeholder="Ask a question about your transcript..."
             className="flex-grow bg-input text-foreground"
           />
-          <Button type="submit" disabled={isLoading} variant="primary">
+          <Button type="submit" disabled={isLoading} variant="default">
             <Send className="w-4 h-4 mr-2" />
             {isLoading ? "Sending..." : "Send"}
           </Button>
