@@ -22,31 +22,37 @@ ${transcript}
 
 Please analyze the transcript and answer the user's questions. If the question cannot be answered based on the transcript, politely say so and explain why.`;
 
-    const stream = createStreamableValue<string>();
+    const stream = createStreamableValue();
+    const encoder = new TextEncoder();
 
-    (async () => {
-      try {
-        const { textStream } = await streamText({
-          model: openai('gpt-4-turbo-preview'),
-          messages: [
-            { role: 'system', content: prompt },
-            ...messages,
-          ],
-        });
+    const readable = new ReadableStream({
+      async start(controller) {
+        try {
+          const { textStream } = await streamText({
+            model: openai('gpt-4-turbo-preview'),
+            messages: [
+              { role: 'system', content: prompt },
+              ...messages,
+            ],
+          });
 
-        for await (const delta of textStream) {
-          stream.update(delta);
+          for await (const delta of textStream) {
+            stream.update(delta);
+            controller.enqueue(encoder.encode(delta));
+          }
+
+          stream.done();
+          controller.close();
+        } catch (error) {
+          console.error('Streaming error:', error);
+          stream.error(error);
+          controller.error(error);
         }
+      },
+    });
 
-        stream.done();
-      } catch (streamError) {
-        console.error('Streaming error:', streamError);
-        stream.error(streamError as Error);
-      }
-    })();
-
-    return new Response(stream.value, {
-      headers: { 'Content-Type': 'text/plain' },
+    return new Response(readable, {
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
     });
   } catch (error) {
     console.error('API route error:', error);
