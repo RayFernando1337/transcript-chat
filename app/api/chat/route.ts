@@ -1,6 +1,5 @@
 import { streamText } from "ai";
 import { openai } from "@ai-sdk/openai";
-import { createStreamableValue } from "ai/rsc";
 
 // IMPORTANT! Set the runtime to edge
 export const runtime = 'edge';
@@ -22,36 +21,15 @@ ${transcript}
 
 Please analyze the transcript and answer the user's questions. If the question cannot be answered based on the transcript, politely say so and explain why.`;
 
-    const stream = createStreamableValue();
-    const encoder = new TextEncoder();
-
-    const readable = new ReadableStream({
-      async start(controller) {
-        try {
-          const { textStream } = await streamText({
-            model: openai('gpt-4-turbo-preview'),
-            messages: [
-              { role: 'system', content: prompt },
-              ...messages,
-            ],
-          });
-
-          for await (const delta of textStream) {
-            stream.update(delta);
-            controller.enqueue(encoder.encode(delta));
-          }
-
-          stream.done();
-          controller.close();
-        } catch (error) {
-          console.error('Streaming error:', error);
-          stream.error(error);
-          controller.error(error);
-        }
-      },
+    const { textStream } = await streamText({
+      model: openai('gpt-4o-mini'),
+      messages: [
+        { role: 'system', content: prompt },
+        ...messages,
+      ],
     });
 
-    return new Response(readable, {
+    return new Response(textStream, {
       headers: { 'Content-Type': 'text/plain; charset=utf-8' },
     });
   } catch (error) {

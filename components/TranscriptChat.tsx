@@ -46,18 +46,23 @@ const TranscriptChat = () => {
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
-      let content = '';
+
+      // Add an initial assistant message
+      setMessages((prev) => [...prev, { id: Date.now().toString(), role: 'assistant', content: '' }]);
 
       if (reader) {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
           const chunk = decoder.decode(value);
-          content += chunk;
-          setMessages((prev) => [
-            ...prev.slice(0, -1),
-            { id: Date.now().toString(), role: 'assistant', content },
-          ]);
+          setMessages((prev) => {
+            const lastMessage = prev[prev.length - 1];
+            const updatedLastMessage = {
+              ...lastMessage,
+              content: lastMessage.content + chunk
+            };
+            return [...prev.slice(0, -1), updatedLastMessage];
+          });
         }
       }
     } catch (error) {
