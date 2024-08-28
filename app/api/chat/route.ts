@@ -27,6 +27,11 @@ Please analyze the transcript and answer the user's questions. If the question c
         { role: 'system', content: prompt },
         ...messages,
       ],
+      maxTokens: 2000,
+      temperature: 0.2,
+      topP: 1,
+      frequencyPenalty: 0,
+      presencePenalty: 0,
     });
 
     return new Response(textStream, {
