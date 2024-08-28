@@ -1,40 +1,58 @@
-import { Configuration, OpenAIApi } from 'openai-edge'
-import { OpenAIStream, StreamingTextResponse } from 'ai'
-
-// Create an OpenAI API client (that's edge friendly!)
-const config = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY
-})
-const openai = new OpenAIApi(config)
+import { streamText } from "ai";
+import { openai } from "@ai-sdk/openai";
+import { createStreamableValue } from "ai/rsc";
 
 // IMPORTANT! Set the runtime to edge
-export const runtime = 'edge'
+export const runtime = 'edge';
+
+interface Message {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
 
 export async function POST(req: Request) {
-  const { messages, transcript } = await req.json()
+  try {
+    const { messages, transcript }: { messages: Message[], transcript: string } = await req.json();
 
-  const prompt = `You are an AI assistant that answers questions based on the following transcript:
+    console.log('Received transcript:', transcript.substring(0, 100) + '...'); // Log first 100 chars of transcript
+
+    const prompt = `You are an AI assistant that answers questions based on the following transcript:
 
 ${transcript}
 
-Please analyze the transcript and answer the user's questions. If the question cannot be answered based on the transcript, politely say so and explain why.`
+Please analyze the transcript and answer the user's questions. If the question cannot be answered based on the transcript, politely say so and explain why.`;
 
-  // Ask OpenAI for a streaming chat completion given the prompt
-  const response = await openai.createChatCompletion({
-    model: 'gpt-4o-mini',
-    stream: true,
-    messages: [
-      { role: 'system', content: prompt },
-      ...messages.map((message: any) => ({
-        role: message.role,
-        content: message.content,
-      })),
-    ],
-  })
+    const stream = createStreamableValue<string>();
 
-  // Convert the response into a friendly text-stream
-  const stream = OpenAIStream(response)
-  
-  // Respond with the stream
-  return new StreamingTextResponse(stream)
+    (async () => {
+      try {
+        const { textStream } = await streamText({
+          model: openai('gpt-4-turbo-preview'),
+          messages: [
+            { role: 'system', content: prompt },
+            ...messages,
+          ],
+        });
+
+        for await (const delta of textStream) {
+          stream.update(delta);
+        }
+
+        stream.done();
+      } catch (streamError) {
+        console.error('Streaming error:', streamError);
+        stream.error(streamError as Error);
+      }
+    })();
+
+    return new Response(stream.value, {
+      headers: { 'Content-Type': 'text/plain' },
+    });
+  } catch (error) {
+    console.error('API route error:', error);
+    return new Response(JSON.stringify({ error: (error as Error).message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 }
