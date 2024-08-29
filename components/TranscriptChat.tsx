@@ -3,13 +3,12 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Upload, Send, MessageCircle } from "lucide-react";
 import { parseSRT } from "@/utils/srtParser";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReactMarkdown from "react-markdown";
-import { ThemeToggle } from "./ThemeToggle";
 import { Message } from "@/types";
 
 const TranscriptChat = () => {
@@ -137,10 +136,6 @@ const TranscriptChat = () => {
 
   return (
     <Card className="w-full h-full max-w-4xl mx-auto bg-card text-card-foreground flex flex-col relative">
-      <CardHeader className="flex flex-row items-center justify-between p-4">
-        <CardTitle className="text-lg">Chat with Your Transcript</CardTitle>
-        <ThemeToggle />
-      </CardHeader>
       <CardContent className="flex-grow overflow-hidden p-4">
         <div className="space-y-4 h-full flex flex-col">
           <div className="flex items-center space-x-2">
