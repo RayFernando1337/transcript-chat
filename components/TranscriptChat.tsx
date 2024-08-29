@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { readStreamableValue } from "ai/rsc";
+import { useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,12 +10,7 @@ import { parseSRT } from "@/utils/srtParser";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReactMarkdown from "react-markdown";
 import { ThemeToggle } from "./ThemeToggle";
-
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-}
+import { Message } from "@/types";
 
 const TranscriptChat = () => {
   const [transcript, setTranscript] = useState("");
@@ -24,7 +18,7 @@ const TranscriptChat = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
@@ -32,8 +26,6 @@ const TranscriptChat = () => {
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
-
-    console.log('Sending transcript:', transcript.substring(0, 100) + '...'); // Log first 100 chars of transcript
 
     try {
       const response = await fetch('/api/chat', {
@@ -47,7 +39,6 @@ const TranscriptChat = () => {
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
 
-      // Add an initial assistant message
       setMessages((prev) => [...prev, { id: Date.now().toString(), role: 'assistant', content: '' }]);
 
       if (reader) {
@@ -57,11 +48,7 @@ const TranscriptChat = () => {
           const chunk = decoder.decode(value);
           setMessages((prev) => {
             const lastMessage = prev[prev.length - 1];
-            const updatedLastMessage = {
-              ...lastMessage,
-              content: lastMessage.content + chunk
-            };
-            return [...prev.slice(0, -1), updatedLastMessage];
+            return [...prev.slice(0, -1), { ...lastMessage, content: lastMessage.content + chunk }];
           });
         }
       }
@@ -74,24 +61,25 @@ const TranscriptChat = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [messages, transcript, input, isLoading]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
-  };
+  }, []);
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
         const content = e.target?.result as string;
-        const parsedTranscript = parseSRT(content);
-        setTranscript(parsedTranscript);
+        setTranscript(parseSRT(content));
       };
       reader.readAsText(file);
     }
-  };
+  }, []);
+
+  const isTranscriptUploaded = useMemo(() => transcript.length > 0, [transcript]);
 
   return (
     <Card className="w-full max-w-4xl mx-auto bg-card text-card-foreground">
@@ -115,7 +103,7 @@ const TranscriptChat = () => {
                 Upload SRT File
               </label>
             </Button>
-            {transcript && <span className="text-sm text-primary">SRT file uploaded!</span>}
+            {isTranscriptUploaded && <span className="text-sm text-primary">SRT file uploaded!</span>}
           </div>
           <Tabs defaultValue="chat">
             <TabsList className="bg-muted text-muted-foreground">

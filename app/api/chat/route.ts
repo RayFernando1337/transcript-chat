@@ -1,19 +1,14 @@
 import { streamText } from "ai";
 import { openai } from "@ai-sdk/openai";
+import { NextResponse } from 'next/server';
+import { ChatAPIRequest } from '@/types';
 
 // IMPORTANT! Set the runtime to edge
 export const runtime = 'edge';
 
-interface Message {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
-}
-
 export async function POST(req: Request) {
   try {
-    const { messages, transcript }: { messages: Message[], transcript: string } = await req.json();
-
-    console.log('Received transcript:', transcript.substring(0, 100) + '...'); // Log first 100 chars of transcript
+    const { messages, transcript }: ChatAPIRequest = await req.json();
 
     const prompt = `You are an AI assistant that answers questions based on the following transcript:
 
@@ -39,9 +34,6 @@ Please analyze the transcript and answer the user's questions. If the question c
     });
   } catch (error) {
     console.error('API route error:', error);
-    return new Response(JSON.stringify({ error: (error as Error).message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }
 }
