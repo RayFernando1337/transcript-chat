@@ -17,12 +17,15 @@ const TranscriptChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState("chat");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
+
+    // Switch to chat tab if not already active
+    setActiveTab("chat");
 
     const userMessage: Message = { id: Date.now().toString(), role: 'user', content: input };
     setMessages((prev) => [...prev, userMessage]);
@@ -149,13 +152,13 @@ const TranscriptChat = () => {
             </Button>
             {isTranscriptUploaded && <span className="text-sm text-primary">SRT file uploaded!</span>}
           </div>
-          <Tabs defaultValue="chat">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="bg-muted text-muted-foreground">
               <TabsTrigger value="chat">Chat</TabsTrigger>
               <TabsTrigger value="transcript">Transcript</TabsTrigger>
             </TabsList>
             <TabsContent value="chat">
-              <ScrollArea className="h-[400px] border rounded-md p-4 bg-card" ref={scrollAreaRef}>
+              <ScrollArea className="h-[400px] border rounded-md p-4 bg-card">
                 {messages.map(renderMessage)}
                 <div ref={messagesEndRef} />
               </ScrollArea>
