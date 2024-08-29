@@ -1,9 +1,9 @@
-import ChatPage from "./chat/page";
+import TranscriptChat from "@/components/TranscriptChat";
 
-const Home = () => (
-  <main className="flex min-h-screen flex-col items-center justify-between p-24">
-    <ChatPage />
-  </main>
-);
-
-export default Home;
+export default function Home() {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+      <TranscriptChat />
+    </main>
+  );
+}
