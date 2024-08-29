@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +17,8 @@ const TranscriptChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,6 +62,7 @@ const TranscriptChat = () => {
       ]);
     } finally {
       setIsLoading(false);
+      scrollToBottom();
     }
   }, [messages, transcript, input, isLoading]);
 
@@ -80,6 +83,47 @@ const TranscriptChat = () => {
   }, []);
 
   const isTranscriptUploaded = useMemo(() => transcript.length > 0, [transcript]);
+
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
+
+  const renderMessage = useCallback((m: Message) => (
+    <div
+      key={m.id}
+      className={`mb-4 ${m.role === "user" ? "text-right" : "text-left"}`}
+    >
+      <span
+        className={`inline-block p-2 rounded-lg ${
+          m.role === "user"
+            ? "bg-primary text-primary-foreground"
+            : "bg-secondary text-secondary-foreground"
+        }`}
+      >
+        {m.role === "user" ? (
+          m.content
+        ) : (
+          <ReactMarkdown
+            className="markdown-content prose prose-sm max-w-none"
+            components={{
+              ul: ({ node, ...props }) => (
+                <ul className="list-disc pl-4" {...props} />
+              ),
+              ol: ({ node, ...props }) => (
+                <ol className="list-decimal pl-4" {...props} />
+              ),
+            }}
+          >
+            {m.content}
+          </ReactMarkdown>
+        )}
+      </span>
+    </div>
+  ), []);
 
   return (
     <Card className="w-full max-w-4xl mx-auto bg-card text-card-foreground">
@@ -111,39 +155,9 @@ const TranscriptChat = () => {
               <TabsTrigger value="transcript">Transcript</TabsTrigger>
             </TabsList>
             <TabsContent value="chat">
-              <ScrollArea className="h-[400px] border rounded-md p-4 bg-card">
-                {messages.map((m) => (
-                  <div
-                    key={m.id}
-                    className={`mb-4 ${m.role === "user" ? "text-right" : "text-left"}`}
-                  >
-                    <span
-                      className={`inline-block p-2 rounded-lg ${
-                        m.role === "user"
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-secondary text-secondary-foreground"
-                      }`}
-                    >
-                      {m.role === "user" ? (
-                        m.content
-                      ) : (
-                        <ReactMarkdown
-                          className="markdown-content prose prose-sm max-w-none"
-                          components={{
-                            ul: ({ node, ...props }) => (
-                              <ul className="list-disc pl-4" {...props} />
-                            ),
-                            ol: ({ node, ...props }) => (
-                              <ol className="list-decimal pl-4" {...props} />
-                            ),
-                          }}
-                        >
-                          {m.content}
-                        </ReactMarkdown>
-                      )}
-                    </span>
-                  </div>
-                ))}
+              <ScrollArea className="h-[400px] border rounded-md p-4 bg-card" ref={scrollAreaRef}>
+                {messages.map(renderMessage)}
+                <div ref={messagesEndRef} />
               </ScrollArea>
             </TabsContent>
             <TabsContent value="transcript">
