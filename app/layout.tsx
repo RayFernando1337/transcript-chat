@@ -24,7 +24,7 @@ export default function RootLayout({
       <body className={`${inter.className} flex flex-col min-h-screen`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <Header />
-          <main className="flex-grow overflow-hidden">
+          <main className="flex-grow flex overflow-hidden">
             {children}
           </main>
           <Footer />

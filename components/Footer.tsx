@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 export const Footer = () => {
   return (
-    <footer className="py-4 flex flex-col items-center justify-center space-y-2 text-xs sm:text-sm text-gray-500 bg-background">
+    <footer className="py-4 flex flex-col items-center justify-center space-y-2 text-xs sm:text-sm text-gray-500 bg-background border-t border-border">
       <div className="flex space-x-4">
         <Link href="https://x.com/RayFernando1337" target="_blank" rel="noopener noreferrer">
           <svg className="w-4 h-4 sm:w-5 sm:h-5 hover:text-blue-400 transition-colors" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
