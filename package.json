@@ -29,7 +29,9 @@
     "react-dom": "^18",
     "react-markdown": "^9.0.1",
     "tailwind-merge": "^2.5.2",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "youtube-transcript": "^1.2.1",
+    "youtube-transcript-api": "^1.1.2"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.14",

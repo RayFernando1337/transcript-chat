@@ -3,10 +3,10 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Upload, Send } from "lucide-react";
+import { Upload, Send, Video, Loader2 } from "lucide-react";
 import { parseSRT } from "@/utils/srtParser";
 import ReactMarkdown from "react-markdown";
-import { Message } from "@/types";
+import { Message, TranscriptEntry } from "@/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -15,6 +15,7 @@ const TranscriptChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [youtubeUrl, setYoutubeUrl] = useState("");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -84,6 +85,65 @@ const TranscriptChat = () => {
     }
   }, []);
 
+  const handleYoutubeUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setYoutubeUrl(e.target.value);
+  }, []);
+
+  const handleYoutubeSubmit = useCallback(async () => {
+    if (!youtubeUrl.trim() || isLoading) return;
+    setIsLoading(true);
+
+    try {
+      const videoId = extractVideoId(youtubeUrl);
+      if (!videoId) throw new Error("Invalid YouTube URL");
+
+      setMessages((prev) => [
+        ...prev,
+        { id: Date.now().toString(), role: 'assistant', content: 'Fetching transcript...' },
+      ]);
+
+      const response = await fetch(`/api/transcript?videoId=${videoId}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch transcript");
+      }
+
+      const transcriptData: TranscriptEntry[] = await response.json();
+      if (transcriptData.length === 0) {
+        throw new Error("No transcript available for this video");
+      }
+      const parsedTranscript = transcriptData.map(entry => entry.text).join(' ');
+      setTranscript(parsedTranscript);
+
+      setMessages((prev) => [
+        ...prev.slice(0, -1), // Remove the "Fetching transcript..." message
+        { id: Date.now().toString(), role: 'assistant', content: 'Transcript fetched successfully. You can now ask questions about the video.' },
+      ]);
+    } catch (error) {
+      console.error('Error fetching YouTube transcript:', error);
+      setMessages((prev) => [
+        ...prev.slice(0, -1), // Remove the "Fetching transcript..." message
+        { id: Date.now().toString(), role: 'assistant', content: `Failed to fetch YouTube transcript: ${error instanceof Error ? error.message : 'Unknown error'}` },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [youtubeUrl, isLoading]);
+
+  const extractVideoId = (url: string): string | null => {
+    const regexes = [
+      /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/,
+      /youtube\.com\/live\/([^"&?\/\s]+)/  // New regex for live URLs
+    ];
+    
+    for (const regex of regexes) {
+      const match = url.match(regex);
+      if (match) return match[1];
+    }
+    
+    return null;
+  };
+
   const renderMessage = useCallback((m: Message) => (
     <div key={m.id} className={`mb-4 ${m.role === "user" ? "text-right" : "text-left"}`}>
       <span className={`inline-block p-2 rounded-lg ${
@@ -105,20 +165,34 @@ const TranscriptChat = () => {
       {!transcript ? (
         <div className="flex flex-col items-center justify-center flex-grow text-center p-6">
           <h2 className="text-2xl font-bold mb-4">Welcome to Transcript Chat</h2>
-          <p className="mb-6">Upload an SRT file to start chatting with your transcript.</p>
-          <Input
-            type="file"
-            accept=".srt"
-            onChange={handleFileUpload}
-            className="hidden"
-            id="transcript-upload"
-          />
-          <Button asChild variant="default" size="lg">
-            <label htmlFor="transcript-upload" className="cursor-pointer">
-              <Upload className="w-4 h-4 mr-2" />
-              Upload SRT File
-            </label>
-          </Button>
+          <p className="mb-6">Upload an SRT file or enter a YouTube URL to start chatting.</p>
+          <div className="flex flex-col space-y-4 w-full max-w-md">
+            <Input
+              type="file"
+              accept=".srt"
+              onChange={handleFileUpload}
+              className="hidden"
+              id="transcript-upload"
+            />
+            <Button asChild variant="outline" size="lg">
+              <label htmlFor="transcript-upload" className="cursor-pointer">
+                <Upload className="w-4 h-4 mr-2" />
+                Upload SRT File
+              </label>
+            </Button>
+            <div className="flex space-x-2">
+              <Input
+                type="text"
+                placeholder="Enter YouTube URL"
+                value={youtubeUrl}
+                onChange={handleYoutubeUrlChange}
+              />
+              <Button onClick={handleYoutubeSubmit} disabled={isLoading}>
+                <Video className="w-4 h-4 mr-2" />
+                Fetch
+              </Button>
+            </div>
+          </div>
         </div>
       ) : (
         <Tabs defaultValue="chat" className="flex flex-col h-full">
@@ -127,7 +201,7 @@ const TranscriptChat = () => {
             <TabsTrigger value="transcript">Transcript</TabsTrigger>
           </TabsList>
           <TabsContent value="chat" className="flex-grow flex flex-col">
-            <ScrollArea className="flex-grow p-4">
+            <ScrollArea className="flex-grow p-4" ref={scrollAreaRef}>
               {messages.map(renderMessage)}
             </ScrollArea>
             <div className="border-t p-4">
@@ -137,9 +211,10 @@ const TranscriptChat = () => {
                   onChange={handleInputChange}
                   placeholder="Ask a question..."
                   className="flex-grow"
+                  disabled={isLoading}
                 />
                 <Button type="submit" disabled={isLoading} size="icon">
-                  <Send className="w-4 h-4" />
+                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 </Button>
               </form>
             </div>

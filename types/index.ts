@@ -8,3 +8,13 @@ export interface ChatAPIRequest {
   messages: Message[];
   transcript: string;
 }
+
+export interface TranscriptEntry {
+  text: string;
+  duration: number;
+  offset: number;
+}
+
+export interface YouTubeTranscriptRequest {
+  videoId: string;
+}
